@@ -13,7 +13,7 @@ This repository implements the **CPL (Comparison-based Preference Learning)** al
 
 To run this project, you'll need the following packages:
 
-- Python 3.x
+- Python 3.8
 - PyTorch
 - Numpy
 - Matplotlib
