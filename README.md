@@ -1,7 +1,3 @@
-Here’s a template for your `README.md` file for this code. This will help others understand the purpose, usage, and setup of the code.
-
----
-
 # **CPL Training for Trajectory Comparison Model**
 
 This repository implements the **CPL (Comparison-based Preference Learning)** algorithm for training a model to compare trajectories using different types of feedback (comparisons, demonstrations, and e-stop). The model is designed for reinforcement learning tasks where the agent's trajectory and feedback are used to learn a preference-based ranking function.
@@ -124,9 +120,3 @@ The model is based on a simple feedforward neural network with three fully conne
 - **Data Preprocessing**: The data file `traj_with_rewards.csv` should contain the trajectories, rewards, and corresponding X and Y coordinates.
   
 ## **References**
-
-- The approach is based on comparison-based preference learning from reinforcement learning, as outlined in the paper by [Author et al., 2025](URL to paper).
-
----
-
-This README should give users all the necessary information to understand the project, set up their environment, and run experiments with different configurations of feedback.
