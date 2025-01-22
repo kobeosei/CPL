@@ -407,7 +407,10 @@ def evaluate(model, data_loader):
 def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, gamma=0.0099, alpha=0.0001, log_dir='./logs', render=False):
     temp_accuracy = 0
     t = 1
-
+    plot_loss = []
+    plot_accu = []
+    plot_prec = []
+    
     writer = SummaryWriter(log_dir)
     model.train()
     loss_function = torch.nn.MSELoss()
@@ -466,7 +469,7 @@ def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, ga
         avg_loss = total_loss / len(data_loader)
         print(len(data_loader))
         print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss}, Selected Trajectory: {selected_trajectory}")
-
+        
         # Evaluate the model
         if (t == 1):
            temp_model = model
@@ -475,6 +478,9 @@ def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, ga
         accuracy, precision, eval_reward1, eval_reward2 = evaluate(model, data_loader_val)           
                
         print(f"Evaluation - Accuracy: {accuracy}, precision: {precision}, Reward1: {eval_reward1}, Reward2: {eval_reward2}")
+        plot_loss.append(avg_loss)
+        plot_accu.append(accuracy)
+        plot_prec.append(precision)
 
         # Log evaluation metrics
         writer.add_scalar('Eval/Accuracy', accuracy, epoch)
@@ -494,6 +500,7 @@ def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, ga
                 #print(f"State: {state}, Reward: {reward}, Done: {done}")
 
     writer.close()
+    return plot_loss, plot_accu, plot_prec
 
 
 if __name__ == "__main__":
@@ -539,7 +546,34 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=0.1) # 0.000000001 no change in reward functions. 0.000001 : 32 batch; 0.00001: 32 batch shows changes
  
     # Train the model
-    train_cpl(model, optimizer, data_loader_train,data_loader_val,epochs=100, gamma=0.99, alpha=0.1, log_dir='./logs', render=args.render) #0099
+    loss, accu, prec= train_cpl(model, optimizer, data_loader_train,data_loader_val,epochs=100, gamma=0.99, alpha=0.1, log_dir='./logs', render=args.render) #0099
+
+
+plt.figure(1)
+
+plt.subplot(1,3,1)
+plt.plot(loss, label= "Training Loss")
+plt.xlabel("Episodes")
+plt.ylabel("Loss")
+plt.title("Training Loss Progress")
+plt.legend()
+
+plt.subplot(1,3,2)
+plt.plot(accu, label= "validation Loss")
+plt.xlabel("Episodes")
+plt.ylabel("Accuracy")
+plt.title("Validation Progress")
+plt.legend()
+
+plt.subplot(1,3,3)
+plt.plot(prec, label= "validation Loss")
+plt.xlabel("Episodes")
+plt.ylabel("Precision")
+plt.title("Validation Progress")
+plt.legend()
+
+plt.savefig("CPL_"+args.feedback+".png")
+plt.show()
 
 
 
