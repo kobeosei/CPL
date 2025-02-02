@@ -404,7 +404,7 @@ def evaluate(model, data_loader):
     return accuracy,precision,avg_reward1,avg_reward2
 
 # Training function for CPL
-def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, gamma=0.0099, alpha=0.0001, log_dir='./logs', render=False):
+def train_cpl(model, optimizer, data_loader, data_loader_val=None,epochs=100, gamma=0.0099, alpha=0.0001, log_dir='./runs', render=False):
     temp_accuracy = 0
     t = 1
     plot_loss = []
@@ -547,8 +547,9 @@ if __name__ == "__main__":
  
     # Train the model
     loss, accu, prec= train_cpl(model, optimizer, data_loader_train,data_loader_val,epochs=100, gamma=0.99, alpha=0.1, log_dir='./logs', render=args.render) #0099
-
-
+    np.save("loss_"+args.feedback+".npy",loss)
+    np.save("acc_"+args.feedback+".npy",accu)
+    np.save("prec_"+args.feedback+".npy",prec)
 plt.figure(1)
 
 plt.subplot(1,3,1)
@@ -559,17 +560,17 @@ plt.title("Training Loss Progress")
 plt.legend()
 
 plt.subplot(1,3,2)
-plt.plot(accu, label= "validation Loss")
+plt.plot(accu, label= "Accuracy")
 plt.xlabel("Episodes")
 plt.ylabel("Accuracy")
-plt.title("Validation Progress")
+plt.title("Accuracy Progress")
 plt.legend()
 
 plt.subplot(1,3,3)
-plt.plot(prec, label= "validation Loss")
+plt.plot(prec, label= "Precision")
 plt.xlabel("Episodes")
 plt.ylabel("Precision")
-plt.title("Validation Progress")
+plt.title("Precision Progress")
 plt.legend()
 
 plt.savefig("CPL_"+args.feedback+".png")

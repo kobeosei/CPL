@@ -1,9 +1,9 @@
 import argparse
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
-
+from torch.utils.tensorboard import SummaryWriter
 
 class QLearningAgent:
     """
@@ -56,35 +56,34 @@ class QLearningAgent:
         target = reward + (self.gamma * self.q_table[next_state, best_next_action] * (1 - done))
         self.q_table[state-1, action] += self.lr * (target - self.q_table[state-1, action])
 
+
 def generate_demonstration_pairs(trajectories, rewards, beta=-1.0):
     unique_trajectories = np.unique(trajectories)
     demonstration_pairs = []
     labels = []
     
     for i in range(len(unique_trajectories)-1):
-                traj = unique_trajectories[i]
-                comp_traj = unique_trajectories[i + 1] 
-                indices = np.where(trajectories == traj)[0]
-             #   reward = rewards[indices].sum()
-             
-                reward = reg_based_model (rewards[indices])
-               
-               
-                comp_indices = np.where(trajectories == comp_traj)[0]
-                comp_reward = rewards[comp_indices].sum()
-                
-                prob_traj = np.exp(beta * reward) / (np.exp(beta * reward) + np.exp(beta * comp_reward))
-                prob_comp_traj = 1 - prob_traj
-                
-                demonstration_pairs.append((traj, comp_traj))
-                
-                if prob_traj > prob_comp_traj:
-                    labels.append(1)
-                if prob_traj < prob_comp_traj:
-                    labels.append(0)
+        traj = unique_trajectories[i]
+        comp_traj = unique_trajectories[i + 1] 
+        indices = np.where(trajectories == traj)[0]
+        reward = reg_based_model(rewards[indices])
+        
+        comp_indices = np.where(trajectories == comp_traj)[0]
+        comp_reward = rewards[comp_indices].sum()
+        
+        prob_traj = np.exp(beta * reward) / (np.exp(beta * reward) + np.exp(beta * comp_reward))
+        prob_comp_traj = 1 - prob_traj
+        
+        demonstration_pairs.append((traj, comp_traj))
+        
+        if prob_traj > prob_comp_traj:
+            labels.append(1)
+        if prob_traj < prob_comp_traj:
+            labels.append(0)
    
     return demonstration_pairs, labels
- 
+
+
 def generate_preference_pairs(trajectories, rewards):
     """
     Generate preference pairs based on trajectories and rewards.
@@ -108,7 +107,7 @@ def generate_preference_pairs(trajectories, rewards):
         indices2 = np.where(trajectories == traj2)[0]
         
         reward1 = reg_based_model(rewards[indices1])
-        reward2 = reg_based_model(rewards[indices1])  # Fix this line to use indices2 for reward2
+        reward2 = reg_based_model(rewards[indices2])
         
         prob = softmax([reward1, reward2])
         
@@ -241,13 +240,16 @@ if __name__ == "__main__":
     episodes = 100
     train_losses, val_accs, val_precisions = [], [], []
 
+    # TensorBoard setup
+    writer = SummaryWriter(log_dir=f"runs/{args.feedback}_run")
+
     for episode in range(episodes):
         total_loss = 0
         correct, total = 0, 0
 
         for (state, next_state), label in zip(train_pairs, train_labels):
             action = agent.choose_action(state)
-            next_state = next_state-1
+            next_state = next_state - 1
             reward = 1 if label == action else -1  # Reward based on feedback
             done = False  # You can adapt this to end episodes
             agent.update(state, action, reward, next_state, done)
@@ -262,31 +264,13 @@ if __name__ == "__main__":
         val_accs.append(val_acc)
         val_precisions.append(val_precision)
 
+        # Log metrics to TensorBoard
+        writer.add_scalar('Loss/train', total_loss, episode)
+        writer.add_scalar('Accuracy/validation', val_acc, episode)
+        writer.add_scalar('Precision/validation', val_precision, episode)
+
         print(f"Episode {episode + 1}/{episodes}, Loss: {total_loss:.2f}, Val Acc: {val_acc:.2f}, Val Prec: {val_precision:.2f}")
 
-    # Plot results
-    plt.figure(1)
-    plt.subplot(1, 3, 1)
-    plt.plot(train_losses, label="Training Loss")
-    plt.xlabel("Episodes")
-    plt.ylabel("Loss")
-    plt.title("Training Loss Progress")
-    plt.legend()
-
-    plt.subplot(1, 3, 2)
-    plt.plot(val_accs, label="Validation Accuracy")
-    plt.xlabel("Episodes")
-    plt.ylabel("Accuracy")
-    plt.title("Validation Accuracy Progress")
-    plt.legend()
-
-    plt.subplot(1, 3, 3)
-    plt.plot(val_precisions, label="Validation Precision")
-    plt.xlabel("Episodes")
-    plt.ylabel("Precision")
-    plt.title("Validation Precision Progress")
-    plt.legend()
-
-    plt.savefig(f"QLearning_{args.feedback}.png")
-    plt.show()
+    # Close the TensorBoard writer
+    writer.close()
 
