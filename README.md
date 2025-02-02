@@ -93,6 +93,8 @@ To visualize evaluation results, TensorBoard logs can be examined as follows:
 
 ```bash
 tensorboard --logdir=./logs
+
+tensorboard --logdir=./runs
 ```
 
 Then, open your browser and go to `http://localhost:6006/` to visualize the results.
